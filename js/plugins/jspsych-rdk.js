@@ -446,8 +446,8 @@ jsPsych.plugins["rdk"] = (function() {
 
 		//Initialize object to store the response data. Default values of -1 are used if the trial times out and the subject has not pressed a valid key
 		var response = {
-			rt: -1,
-			key: -1
+			rt: null,
+			key: null
 		}
 		
 		//Declare a global timeout ID to be initialized below in animateDotMotion function and to be used in after_response function
@@ -576,7 +576,7 @@ jsPsych.plugins["rdk"] = (function() {
 		function after_response(info) {
 
 			//If the response has not been recorded, record it
-			if (response.key == -1) {
+			if (response.key == null) {
 				response = info; //Replace the response object created above
 			}
 
