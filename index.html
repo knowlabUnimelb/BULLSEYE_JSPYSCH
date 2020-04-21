@@ -20,11 +20,11 @@
     <body></body>
 
     <script>
-
-
 // TODO: 
-// - Replace handedness question with Edinburgh scale
-
+// Add consent (finalise consent)
+// Run through to check timing
+//
+//
 // Data file
 //1 subject
 //2 ball_condition
@@ -38,7 +38,7 @@
 //10 rt
 //11 too_slow
 //12 button_pressed (mouse_type, handedness, calm, relaxed, confident)
-//---> 13 Responses
+//13 Responses
 //14 calibrate_x_left
 //15 calibrate_y_left
 //16 calibrate_x_right
@@ -52,6 +52,10 @@
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
     /* Experiment timelines  */
     var experiment_timeline = [];
+
+    var url = location["href"]; // Return full url with id nubmer
+    var idString = url.split("?")[1]; 
+    var id = idString.split("=")[1];
     
     var subject_id = Math.floor(Math.random()*100000);
 
@@ -63,8 +67,8 @@
     var browser_window_height = window.innerHeight;
     var browser_window_width = window.innerWidth;
 
-    var nPracTrials = 2; // ? practice
-    var nExpTrials = 5;  // ? experimental trials 
+    var nPracTrials = 3; // 3 practice
+    var nExpTrials = 30;  // 30 experimental trials 
 
     var deadline = 750; // 600 ms
     var no_deadline = 60000; // 600 ms
@@ -80,7 +84,8 @@
         subject: subject_id,
         ball_condition: ball_condition[0],
         browser_window_height: browser_window_height,
-        browser_window_width: browser_window_width
+        browser_window_width: browser_window_width,
+        uniqueid: id
     });
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
@@ -98,6 +103,7 @@
       type: "html-keyboard-response",
       stimulus: "<p>Welcome to the Bullseye Experiment.</p>" + 
                 "<p>Please put aside all distractions while completing the experiment.</p>" + 
+                "<p>Once you begin, do not refresh this page</p>" + 
                 "<p>Press any key to begin.</p>",
         data: {trial_event: 'instructions'}
     };
@@ -124,10 +130,30 @@
         data: {trial_event: 'instructions'}
     };
 
-    var handedness_instructions = {
+    var end_calibration_instructions ={
       type: "html-keyboard-response",
       stimulus: "<p>Excellent! Now your mouse is calibrated to your monitor.</p>" +
-      "<p>Next, we are going to ask some questions about you.</p>" +
+                "<p>Press any key to continue.</p>",
+        data: {trial_event: 'instructions'},
+        on_start: function(data){
+            calibrate_x_left = calibrate_x_left/nCalibration;
+            calibrate_y_left = calibrate_y_left/nCalibration;
+            calibrate_x_right = calibrate_x_right/nCalibration;
+            calibrate_y_right = calibrate_y_right/nCalibration;
+
+           jsPsych.data.addProperties({
+                calibrate_x_left: calibrate_x_left,
+                calibrate_y_left: calibrate_y_left,
+                calibrate_x_right: calibrate_x_right,
+                calibrate_y_right: calibrate_y_right
+            });
+        }
+    };
+        
+
+    var handedness_instructions = {
+      type: "html-keyboard-response",
+      stimulus: "<p>Next, we are going to ask some questions about which hand is your dominant hand.</p>" +
       "<p>Press any key to begin.</p>",
         data: {trial_event: 'instructions'}
     };
@@ -181,11 +207,22 @@
         data: {trial_event: 'instructions'}
     };
 
-    var end_practice_instructions = {
+    var end_practice_accuracy_instructions = {
       type: "html-keyboard-response",
-      stimulus: "<p>Ok, ready to begin the experimental block? Press any key to start.</p>",
+      stimulus: "<p>Ok, ready to begin the experimental block?</p>" + 
+                "<p>Remember: Respond as accurately as possible.</p>" + 
+                "<p>Press any key to start.</p>",
         data: {trial_event: 'instructions'}
     };
+
+    var end_practice_speed_instructions = {
+      type: "html-keyboard-response",
+      stimulus: "<p>Ok, ready to begin the experimental block?</p>" + 
+                "<p>Remember: Respond as fast as possible.</p>" + 
+                "<p>Press any key to start.</p>",
+        data: {trial_event: 'instructions'}
+    };
+
 
     var end_experiment_instructions = {
       type: "html-keyboard-response",
@@ -263,20 +300,7 @@
         choices: ['Always left', 'Usually left', 'Both equally', 'Usually right', 'Always right'],
         button_html:  '<button class="jspsych-btn"><div style="font-size:30px;">%choice%</div></button>',
         prompt: "<p>Which hand do you use for this activity/object?</p>",
-        data: {trial_event: 'handedness'},
-        on_start: function(data){
-            calibrate_x_left = calibrate_x_left/nCalibration;
-            calibrate_y_left = calibrate_y_left/nCalibration;
-            calibrate_x_right = calibrate_x_right/nCalibration;
-            calibrate_y_right = calibrate_y_right/nCalibration;
-
-           jsPsych.data.addProperties({
-                calibrate_x_left: calibrate_x_left,
-                calibrate_y_left: calibrate_y_left,
-                calibrate_x_right: calibrate_x_right,
-                calibrate_y_right: calibrate_y_right
-            });
-        }
+        data: {trial_event: 'handedness'}
     };
 
     var throwing = {
@@ -326,7 +350,7 @@
 
    var relaxed = {
         type: 'html-button-response',
-        stimulus: '<p>My thoughts are: </p>',
+        stimulus: '<p>My body feels: </p>',
         choices: ['1=Relaxed', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11=Tense'],
         button_html:  '<button class="jspsych-btn"><div style="font-size:30px;">%choice%</div></button>',
         prompt: "<p>Thinking about the task: rate how relaxed or tense you are feeling from 1 to 11</p>",
@@ -335,7 +359,7 @@
 
    var confident = {
         type: 'html-button-response',
-        stimulus: '<p>My thoughts are: </p>',
+        stimulus: '<p>I am feeling: </p>',
         choices: ['1=Confident', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11=Scared'],
         button_html:  '<button class="jspsych-btn"><div style="font-size:30px;">%choice%</div></button>',
         prompt: "<p>Thinking about the task: rate how confident or scared you are feeling from 1 to 11</p>",
@@ -399,6 +423,7 @@
         stimulus: jsPsych.timelineVariable('stimulus'),
         stimulus_duration: deadline,
         data: jsPsych.timelineVariable('data'),
+        post_trial_gap: 50,
         on_finish: function(data){
             if (data.condition == "left"){
                 data.error = Math.sqrt(Math.pow(calibrate_x_left - data.xlocation, 2) + Math.pow(calibrate_y_left - data.ylocation, 2));
@@ -419,7 +444,7 @@
         stimulus: function(){
             var last_trial_too_slow = jsPsych.data.get().filter({trial_event: "bullseye_trial"}).last(1).values()[0].too_slow;
                 if(last_trial_too_slow){
-                    return "<p>Too Slow! Respond Faster!</p>";
+                    return "<p><div style='font-size:60px;'>Too Slow! Respond Faster!</div></p>";
                 } else {
                     return "";
                 }
@@ -490,23 +515,19 @@
     experiment_timeline.push(welcome);
     experiment_timeline.push(start_instructions);
 
+    experiment_timeline.push(sex_age);
+
     experiment_timeline.push(mouse_type);
     experiment_timeline.push(calibration_instructions);
     experiment_timeline.push(calibration_accuracy);
+    experiment_timeline.push(end_calibration_instructions);
 
     experiment_timeline.push(handedness_instructions);
-    experiment_timeline.push(sex_age);
+
     experiment_timeline.push(handedness);
     experiment_timeline.push(throwing);
     experiment_timeline.push(toothbrush);
     experiment_timeline.push(spoon);
-
-    if (ball_condition[0] == 1){
-        experiment_timeline.push(ball_instructions);
-    } else {
-        experiment_timeline.push(quiet_instructions);
-    };
-    experiment_timeline.push(countdown_timer);
 
     experiment_timeline.push(accuracy_instructions);
     experiment_timeline.push(start_practice_instructions);
@@ -516,7 +537,7 @@
     experiment_timeline.push(relaxed);
     experiment_timeline.push(confident);
 
-    experiment_timeline.push(end_practice_instructions);
+    experiment_timeline.push(end_practice_accuracy_instructions);
     experiment_timeline.push(exp_accuracy);
 
     experiment_timeline.push(calm);
@@ -531,7 +552,14 @@
     experiment_timeline.push(relaxed);
     experiment_timeline.push(confident);
 
-    experiment_timeline.push(end_practice_instructions);
+    if (ball_condition[0] == 1){
+        experiment_timeline.push(ball_instructions);
+    } else {
+        experiment_timeline.push(quiet_instructions);
+    };
+    experiment_timeline.push(countdown_timer);
+
+    experiment_timeline.push(end_practice_speed_instructions);
     experiment_timeline.push(exp_speed);
 
     experiment_timeline.push(calm);
