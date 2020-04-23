@@ -13,7 +13,7 @@
         <script src="js/plugins/jspsych-html-button-response.js"></script>
         <script src="js/plugins/jspsych-image-button-response.js"></script>
         <script src="js/plugins/jspsych-html-keyboard-response.js"></script>
-
+        <script src="js/plugins/jspsych-external-html.js"></script>
         <!-- CSS -->
         <link href="css/jspsych.css" rel="stylesheet" type="text/css"></link>
     </head>
@@ -26,26 +26,29 @@
 //
 //
 // Data file
-//1 subject
-//2 ball_condition
-//3 trial_index
-//4 trial_event
-//5 stimulus
-//6 condition: left vs right
-//7 xlocation
-//8 ylocation
-//9 error
-//10 rt
-//11 too_slow
-//12 button_pressed (mouse_type, handedness, calm, relaxed, confident)
-//13 Responses
-//14 calibrate_x_left
-//15 calibrate_y_left
-//16 calibrate_x_right
-//17 calibrate_y_right
-//18 trial_type
-//19 internal_node_id
-//20 time_elapsed
+// subject: unique subject id generated randomly for each participant
+// ball_condition: 1 = squeeze ball, 2 = sit silently [30 seconds]
+// trial_index: current trial number
+// trial_event: current trial type
+// stimulus: value of stimulus
+// condition: target left vs target right
+// xlocation: x location of click
+// ylocation: y location of click
+// error: Euclidean distance between click and true location for left/right condition
+// rt: response time (msec)
+// too_slow: 0 = response before deadlien, 1 = response after deadline
+// button_pressed: response to various questionairres (handedness: left, right; calmness: 1 - 11; relaxed: 1 - 11; confident: 1 - 11)
+// responses: text input for sex and gender questions
+// calibrate_x_left: Calibrated x location for left target
+// calibrate_y_left: Calibrated y location for left target
+// calibrate_x_right: Calibrated x location for right target
+// calibrate_y_right: Calibrated y location for right target
+// browser_window_height: Height of browser window in pixels
+// browser_window_width: Width of browser window in pixels
+// trial_type: jspsych plugin used on current trial
+// internal_node_id: not used
+// time_elapsed:	time elapsed from start of experiment
+// uniqueid:	SONA generated id
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /*          SET UP EXPERIMENTAL PARAMETERS */
@@ -58,6 +61,10 @@
     var id = idString.split("=")[1];
     
     var subject_id = Math.floor(Math.random()*100000);
+
+    var plsfile = './stims/pls.html';
+    var consentfile = './stims/consent.html';
+    var debrieffile = './stims/debrief.html';
 
     var nCalibration = 10; // 5 x 2 locations = 10
     var calibrate_x_left = 0; // Running total of xposition
@@ -108,6 +115,31 @@
         data: {trial_event: 'instructions'}
     };
     
+    var pls = {
+        type: "external-html",
+        url: plsfile,
+        cont_btn: "next",
+        data: {trial_event: 'instructions'}
+    };
+
+    var check_consent = function(elem) {
+      if (document.getElementById('consent_checkbox').checked) {
+        return true;
+      }
+      else {
+        alert("If you wish to participate, you must check the box next to the statement 'I agree to participate in this study.'");
+        return false;
+      }
+      return false;
+    };
+
+    var consent = {
+        type: "external-html",
+        url: consentfile,
+        cont_btn: "start",
+        check_fn: check_consent,
+        data: {trial_event: 'instructions'}
+    };
     
     var start_instructions = {
       type: "html-keyboard-response",
@@ -223,6 +255,20 @@
         data: {trial_event: 'instructions'}
     };
 
+    var debrief = {
+        type: "external-html",
+        url: debrieffile,
+        cont_btn: "next",
+        data: {trial_event: 'instructions'}
+    };
+
+    var contactEmail = {
+        type: 'survey-text',
+        questions: [
+            {prompt: "<p>If you would like to be contacted about the results of this study<br><br>, please enter your email address</p>", name: "Email"}
+        ],
+        data: {trial_event: "email"}
+    };
 
     var end_experiment_instructions = {
       type: "html-keyboard-response",
@@ -513,6 +559,8 @@
 
     /* Set up experiment timeline */
     experiment_timeline.push(welcome);
+    experiment_timeline.push(pls);
+    experiment_timeline.push(consent);
     experiment_timeline.push(start_instructions);
 
     experiment_timeline.push(sex_age);
@@ -565,6 +613,8 @@
     experiment_timeline.push(calm);
     experiment_timeline.push(relaxed);
     experiment_timeline.push(confident);
+    experiment_timeline.push(debrief);
+    experiment_timeline.push(contactEmail);
     
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /*          SAVE DATA AND END EXPERIMENT                   */
@@ -584,7 +634,9 @@
         timeline: experiment_timeline,
         preload_images: bullseye.concat(calibration.concat(otherImages)),
         default_iti: iti, 
-        use_webaudio: false
+        use_webaudio: false, 
+        show_progress_bar: true, 
+        auto_update_progress_bar: true
         }
     );
     </script>
