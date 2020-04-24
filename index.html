@@ -26,29 +26,29 @@
 //
 //
 // Data file
-// subject: unique subject id generated randomly for each participant
-// ball_condition: 1 = squeeze ball, 2 = sit silently [30 seconds]
-// trial_index: current trial number
-// trial_event: current trial type
-// stimulus: value of stimulus
-// condition: target left vs target right
-// xlocation: x location of click
-// ylocation: y location of click
-// error: Euclidean distance between click and true location for left/right condition
-// rt: response time (msec)
-// too_slow: 0 = response before deadlien, 1 = response after deadline
-// button_pressed: response to various questionairres (handedness: left, right; calmness: 1 - 11; relaxed: 1 - 11; confident: 1 - 11)
-// responses: text input for sex and gender questions
-// calibrate_x_left: Calibrated x location for left target
-// calibrate_y_left: Calibrated y location for left target
-// calibrate_x_right: Calibrated x location for right target
-// calibrate_y_right: Calibrated y location for right target
-// browser_window_height: Height of browser window in pixels
-// browser_window_width: Width of browser window in pixels
-// trial_type: jspsych plugin used on current trial
-// internal_node_id: not used
-// time_elapsed:	time elapsed from start of experiment
-// uniqueid:	SONA generated id
+// 1 subject: unique subject id generated randomly for each participant
+// 2 ball_condition: 1 = squeeze ball, 2 = sit silently [30 seconds]
+// 3 trial_index: current trial number
+// 4 trial_event: current trial type
+// 5 stimulus: value of stimulus
+// 6 condition: target left vs target right
+// 7 xlocation: x location of click
+// 8 ylocation: y location of click
+// 9 error: Euclidean distance between click and true location for left/right condition
+// 10 rt: response time (msec)
+// 11 too_slow: 0 = response before deadlien, 1 = response after deadline
+// 12 button_pressed: response to various questionairres (handedness: left, right; calmness: 1 - 11; relaxed: 1 - 11; confident: 1 - 11)
+// 13 responses: text input for sex and gender questions
+// 14 calibrate_x_left: Calibrated x location for left target
+// 15 calibrate_y_left: Calibrated y location for left target
+// 16 calibrate_x_right: Calibrated x location for right target
+// 17 calibrate_y_right: Calibrated y location for right target
+// 18 browser_window_height: Height of browser window in pixels
+// 19 browser_window_width: Width of browser window in pixels
+// 20 trial_type: jspsych plugin used on current trial
+// 21 internal_node_id: not used
+// 22 time_elapsed:	time elapsed from start of experiment
+// 23 uniqueid:	SONA generated id
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /*          SET UP EXPERIMENTAL PARAMETERS */
@@ -74,8 +74,8 @@
     var browser_window_height = window.innerHeight;
     var browser_window_width = window.innerWidth;
 
-    var nPracTrials = 3; // 3 practice
-    var nExpTrials = 30;  // 30 experimental trials 
+    var nPracTrials = 2; // 3 practice
+    var nExpTrials = 15;  // 30 experimental trials 
 
     var deadline = 750; // 600 ms
     var no_deadline = 60000; // 600 ms
@@ -110,7 +110,7 @@
       type: "html-keyboard-response",
       stimulus: "<p>Welcome to the Bullseye Experiment.</p>" + 
                 "<p>Please put aside all distractions while completing the experiment.</p>" + 
-                "<p>Once you begin, do not refresh this page</p>" + 
+                "<p>Once you begin, do not refresh this page or close the browser until the very end.</p>" + 
                 "<p>Press any key to begin.</p>",
         data: {trial_event: 'instructions'}
     };
@@ -218,7 +218,7 @@
         stimulus: "<p> In this block, you will be shown a bullseye target.</p>" +
                   "<p> You should respond by clicking on the bullseye.</p>" + 
                   "<p><b>RESPOND AS ACCURATELY AS POSSIBLE</b></p>" + 
-                  "<p>There will be " + String(nPracTrials) + " practice trials and " + String(nExpTrials) + " experimental trials.</p>"+
+                  "<p>There will be " + String(nPracTrials*2) + " practice trials and " + String(nExpTrials*2) + " experimental trials.</p>"+
                   "<p>Press a button to start the practice trials.</p>",
         data: {trial_event: 'instructions'}
     };   
@@ -265,7 +265,7 @@
     var contactEmail = {
         type: 'survey-text',
         questions: [
-            {prompt: "<p>If you would like to be contacted about the results of this study<br><br>, please enter your email address</p>", name: "Email"}
+            {prompt: "<p>If you would like to be contacted about the results of this study, <br><br> please enter your email address; otherwise, leave blank.<br><br> Then press Enter to read the debriefing document.</p>", name: "Email"}
         ],
         data: {trial_event: "email"}
     };
@@ -613,8 +613,9 @@
     experiment_timeline.push(calm);
     experiment_timeline.push(relaxed);
     experiment_timeline.push(confident);
-    experiment_timeline.push(debrief);
     experiment_timeline.push(contactEmail);
+
+
     
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /*          SAVE DATA AND END EXPERIMENT                   */
@@ -626,7 +627,9 @@
             serverComm.save_data(jsPsych.data.get().values())
       }
     }
+
     experiment_timeline.push(save_data);
+    experiment_timeline.push(debrief);
     experiment_timeline.push(end_experiment_instructions);
 
     /* Initialise experiment */
