@@ -20,9 +20,7 @@
     <body></body>
 
     <script>
-// TODO: 
-// Add consent (finalise consent)
-// Run through to check timing
+// TODO: save each block
 //
 //
 // Data file
@@ -54,6 +52,21 @@
 /*          SET UP EXPERIMENTAL PARAMETERS */
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
     /* Experiment timelines  */
+
+    var save_data = {
+        type: 'call-function',
+        func: function(){
+            serverComm.save_data(jsPsych.data.get().values())
+      }
+    }
+
+    var save_trial_data = {
+        type: 'call-function',
+        func: function(){
+            serverComm.save_data(jsPsych.data.getLastTrialData().values())
+        }
+    }
+
     var experiment_timeline = [];
 
     var url = location["href"]; // Return full url with id nubmer
@@ -509,7 +522,7 @@
 
     // calibration_trials
     var calibration_accuracy = {
-        timeline: [calibrate_trial],
+        timeline: [calibrate_trial, save_trial_data],
         timeline_variables: calibration_stimulus,
         randomize_order: true,
         repetitions: nCalibration
@@ -523,14 +536,14 @@
 
     // Practice Timeline events
     var prac_accuracy = {
-        timeline: [fixation, accuracy_trial, feedback],
+        timeline: [fixation, accuracy_trial, save_trial_data, feedback],
         timeline_variables: bullseye_stimulus,
         randomize_order: true,
         repetitions: nPracTrials
     }
 
     var prac_speed = {
-        timeline: [fixation, speed_trial, feedback],
+        timeline: [fixation, speed_trial, save_trial_data, feedback],
         timeline_variables: bullseye_stimulus,
         randomize_order: true,
         repetitions: nPracTrials
@@ -539,14 +552,14 @@
 
     // Experimental Timeline events
     var exp_accuracy = {
-        timeline: [fixation, accuracy_trial, feedback],
+        timeline: [fixation, accuracy_trial, save_trial_data, feedback],
         timeline_variables: bullseye_stimulus,
         randomize_order: true,
         repetitions: nExpTrials
     }
 
     var exp_speed = {
-        timeline: [fixation, speed_trial, feedback],
+        timeline: [fixation, speed_trial, save_trial_data, feedback],
         timeline_variables: bullseye_stimulus,
         randomize_order: true,
         repetitions: nExpTrials
@@ -564,8 +577,10 @@
     experiment_timeline.push(start_instructions);
 
     experiment_timeline.push(sex_age);
+    experiment_timeline.push(save_trial_data); // Save sex and age data
 
     experiment_timeline.push(mouse_type);
+    experiment_timeline.push(save_trial_data); // Save mouse type data
     experiment_timeline.push(calibration_instructions);
     experiment_timeline.push(calibration_accuracy);
     experiment_timeline.push(end_calibration_instructions);
@@ -573,32 +588,45 @@
     experiment_timeline.push(handedness_instructions);
 
     experiment_timeline.push(handedness);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(throwing);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(toothbrush);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(spoon);
+    experiment_timeline.push(save_trial_data); // Save 
 
     experiment_timeline.push(accuracy_instructions);
     experiment_timeline.push(start_practice_instructions);
     experiment_timeline.push(prac_accuracy);
 
     experiment_timeline.push(calm);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(relaxed);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(confident);
+    experiment_timeline.push(save_trial_data); // Save 
 
     experiment_timeline.push(end_practice_accuracy_instructions);
     experiment_timeline.push(exp_accuracy);
 
     experiment_timeline.push(calm);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(relaxed);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(confident);
+    experiment_timeline.push(save_trial_data); // Save 
 
     experiment_timeline.push(speed_instructions);
     experiment_timeline.push(start_practice_instructions);
     experiment_timeline.push(prac_speed);
 
     experiment_timeline.push(calm);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(relaxed);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(confident);
+    experiment_timeline.push(save_trial_data); // Save 
 
     if (ball_condition[0] == 1){
         experiment_timeline.push(ball_instructions);
@@ -611,9 +639,13 @@
     experiment_timeline.push(exp_speed);
 
     experiment_timeline.push(calm);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(relaxed);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(confident);
+    experiment_timeline.push(save_trial_data); // Save 
     experiment_timeline.push(contactEmail);
+    experiment_timeline.push(save_trial_data); // Save 
 
 
     
@@ -621,14 +653,8 @@
 /*          SAVE DATA AND END EXPERIMENT                   */
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 
-    var save_data = {
-        type: 'call-function',
-        func: function(){
-            serverComm.save_data(jsPsych.data.get().values())
-      }
-    }
-
-    experiment_timeline.push(save_data);
+        
+//    experiment_timeline.push(save_data);
     experiment_timeline.push(debrief);
     experiment_timeline.push(end_experiment_instructions);
 
