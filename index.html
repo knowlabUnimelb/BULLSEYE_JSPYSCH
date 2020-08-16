@@ -11,6 +11,7 @@
         <script src="js/jspsych-image-mouse-response.js"></script>
         <script src="js/plugins/jspsych-survey-text.js"></script>
         <script src="js/plugins/jspsych-html-button-response.js"></script>
+        <script src="js/plugins/jspsych-image-keyboard-response.js"></script>
         <script src="js/plugins/jspsych-image-button-response.js"></script>
         <script src="js/plugins/jspsych-html-keyboard-response.js"></script>
         <script src="js/plugins/jspsych-external-html.js"></script>
@@ -20,8 +21,6 @@
     <body></body>
 
     <script>
-// TODO: save each block
-//
 //
 // Data file
 // 1 subject: unique subject id generated randomly for each participant
@@ -53,13 +52,6 @@
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
     /* Experiment timelines  */
 
-    var save_data = {
-        type: 'call-function',
-        func: function(){
-            serverComm.save_data(jsPsych.data.get().values())
-      }
-    }
-
     var save_trial_data = {
         type: 'call-function',
         func: function(){
@@ -69,17 +61,18 @@
 
     var experiment_timeline = [];
 
-    var url = location["href"]; // Return full url with id nubmer
-    var idString = url.split("?")[1]; 
-    var id = idString.split("=")[1];
-    
+    //var url = location["href"]; // Return full url with id nubmer
+    //var idString = url.split("?")[1]; 
+    //var id = idString.split("=")[1];
+    var id = jsPsych.data.getURLVariable("id");    
+
     var subject_id = Math.floor(Math.random()*100000);
 
     var plsfile = './stims/pls.html';
     var consentfile = './stims/consent.html';
     var debrieffile = './stims/debrief.html';
 
-    var nCalibration = 10; // 5 x 2 locations = 10
+    var nCalibration = 5; // 5 x 2 locations = 10
     var calibrate_x_left = 0; // Running total of xposition
     var calibrate_y_left = 0; // Running total of yposition
     var calibrate_x_right = 0; // Running total of xposition
@@ -87,8 +80,8 @@
     var browser_window_height = window.innerHeight;
     var browser_window_width = window.innerWidth;
 
-    var nPracTrials = 2; // 3 practice
-    var nExpTrials = 15;  // 30 experimental trials 
+    var nPracTrials = 3;  // 3 practice
+    var nExpTrials =  15; // 30 experimental trials 
 
     var deadline = 750; // 600 ms
     var no_deadline = 60000; // 600 ms
@@ -98,6 +91,10 @@
 
     var conditions = [1,2]; // accuracy, speed
     var ball_condition = jsPsych.randomization.shuffle([1, 2]); // Counterbalancing initial condition   
+
+    // Leaderboard values
+    var minerror = 7.62;
+    var maxerror = 170.03;
 
     // Add data to all trials
     jsPsych.data.addProperties({
@@ -114,7 +111,7 @@
     /* Preload images  */
     var bullseye = ['./stims/bullseye_left.png', './stims/bullseye_right.png'];
     var calibration = ['./stims/calibrate_left.png', './stims/calibrate_right.png'];
-    var otherImages = ['./stims/mice.png', './stims/calibration.png'];
+    var otherImages = ['./stims/mice.png', './stims/calibration.png', './stims/points.png'];
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /*          SET UP INSTRUCTIONS                            */
@@ -164,6 +161,29 @@
         data: {trial_event: 'instructions'}
     };
 
+    var competition_instructions = {
+      type: "html-keyboard-response",
+      stimulus: "<p>Some of the blocks in the experiment will ask you to be accurate. </p>" +
+      "<p>Later in the experiment, you will be asked to respond as quickly and as accurately as possible.</p>" +
+      "<p>For these trials, there will be a time limit of " + Number(deadline) + " milliseconds to respond.</p>" +
+      "<p>We will tally up how far you are from the bullseye for all of the trials before the deadline.</p>" +
+      "<p>If you have the best performance at the end of the experiment, then you will win a prize.</p>" +
+      "<p>Press any key to begin.</p>",
+        data: {trial_event: 'instructions'}
+    };
+
+    var competition_start_instructions = {
+      type: "html-keyboard-response",
+      stimulus: "<h1>Competition Time!</h1>" +
+      "<p>We're offering a $100 voucher to the most accurate person in the next two blocks of speed trials.</p>" +
+      "<p>To determine the winner, we will average your distance from the bullseye for all clicks made before the " + Number(deadline) + "msec deadline.</p>" +
+      "<p>To win, you need to click before the speed deadline on at least 80% of the trials.</p>" +
+      "<p>If you have the most accurate performance at the end of the experiment (the lowest average error), then you will win the voucher.</p>" +
+      "<p>We will show you a leaderboard half-way through the block so you know how well you're going.</p>" +
+      "<p>Good luck! Press any key to begin.</p>",
+        data: {trial_event: 'instructions'}
+    };
+
     var calibration_instructions = {
       type: "html-keyboard-response",
       stimulus: "<p>Before we start, we need to calibrate the experiment.</p>" +
@@ -206,7 +226,7 @@
     var ball_instructions = {
       type: "html-keyboard-response",
       stimulus: "<p>Before we continue, we would like you to perform a small task. </p>" +
-      "<p>Can you please get a rolled up pair of socks.</p>" +
+      "<p>Can you please get a ball or a rolled up pair of socks.</p>" +
       "<p>On the following screen you will see a countdown timer presented for 30 seconds.</p>" +
       "<p>We would like you to squeeze the ball of socks with your left hand, in a squeeze and release, squeeze and release fashion, for 30 seconds.</p>" +
       "<p>Squeezing and releasing for 30 seconds has been shown to improve performance in high pressure tasks.</p>" +
@@ -216,8 +236,7 @@
 
     var quiet_instructions = {
       type: "html-keyboard-response",
-      stimulus: "<p>Excellent! Now your mouse is calibrated to your monitor.</p>" +
-      "<p>Before we continue, we would like you to perform a small task. </p>" +
+      stimulus: "<p>Before we continue, we would like you to perform a small task. </p>" +
       "<p>On the following screen you will see a countdown timer presented for 30 seconds.</p>" +
       "<p>We would like you to sit quietly for 30 seconds.</p>" +
       "<p>Sitting quietly has been shown to improve performance in high pressure tasks.</p>" +
@@ -241,7 +260,8 @@
         stimulus: "<p> In this block, you will be shown a bullseye target.</p>" +
                   "<p> You should respond by clicking on the bullseye.</p>" + 
                   "<p><b>RESPOND AS FAST AS POSSIBLE</b></p>" + 
-                  "<p>There will be " + String(nPracTrials) + " practice trials and " + String(nExpTrials) + " experimental trials.</p>"+
+                  "<p>There will be " + String(nPracTrials*2) + " practice trials and " + String(nExpTrials*2) + " experimental trials.</p>"+
+                  "<p> Your performance in the experimental trials will be counted toward the prize competition.</p>" + 
                   "<p>Press a button to start the practice trials.</p>",
         data: {trial_event: 'instructions'}
     };
@@ -264,6 +284,23 @@
       type: "html-keyboard-response",
       stimulus: "<p>Ok, ready to begin the experimental block?</p>" + 
                 "<p>Remember: Respond as fast as possible.</p>" + 
+                "<p>Press any key to start.</p>",
+        data: {trial_event: 'instructions'}
+    };
+
+    var end_speed_block_instructions = {
+      type: "html-keyboard-response",
+      stimulus: "<p>Ok, that was the end of the first block.</p>" + 
+                "<p>On the next screen you will see a leaderboard showing how well you did.</p>" + 
+                "<p>Press any key to see your performance.</p>",
+        data: {trial_event: 'instructions'}
+    };
+
+    var start_speed_block_instructions = {
+      type: "html-keyboard-response",
+      stimulus: "<p>Ok, one more block to go.</p>" + 
+                "<p>Remember to respond as fast a possible.</p>" + 
+                "<p>Your performance will be counted toward the prize competition.</p>" + 
                 "<p>Press any key to start.</p>",
         data: {trial_event: 'instructions'}
     };
@@ -337,12 +374,26 @@
    ];
 
     // Need to code the condition
-   var bullseye_stimulus = [
+   var acc_bullseye_stimulus = [
         {stimulus: bullseye[0], data:{trial_event: 'bullseye_trial', condition: 'left'}},
         {stimulus: bullseye[1], data:{trial_event: 'bullseye_trial', condition: 'right'}}
    ];
 
+   var speed_bullseye_stimulus = [
+        {stimulus: bullseye[0], data:{trial_event: 'speed_trial', condition: 'left'}},
+        {stimulus: bullseye[1], data:{trial_event: 'speed_trial', condition: 'right'}}
+   ];
+
+
     // Trial Events
+   var points = {
+        type: 'image-keyboard-response',
+        stimulus: './stims/points.png',
+        prompt: "<p>Cost at each bullseye level</p><p>Press any button continue</p?",
+        data: {trial_event: 'points'}
+   };
+
+
    var mouse_type = {
         type: 'image-button-response',
         stimulus: './stims/mice.png',
@@ -360,6 +411,7 @@
         button_html:  '<button class="jspsych-btn"><div style="font-size:30px;">%choice%</div></button>',
         prompt: "<p>Which hand do you use for this activity/object?</p>",
         data: {trial_event: 'handedness'}
+
     };
 
     var throwing = {
@@ -433,6 +485,7 @@
         trial_duration: timer
     } 
 
+
     var fixation = {
         type: 'image-button-response',
         stimulus: '',
@@ -498,6 +551,21 @@
         }
     }
 
+// Need to make it so that this is only response before the deadline
+// Math.min(Number(Math.round(100 * (jsPsych.data.get().select('error').mean() - (jsPsych.data.get().select('error').sd()/2)))/100), Number(minerror))
+    var leaderboard = {
+        type: 'html-keyboard-response',
+        stimulus: function(){return '<table style="width:100%"><caption>Player Scoreboard<br>(Lower Scores are Better)<br><br></caption><tr><th>Participant</th><th>Score</th></tr><tr><td>Top Score (#1):</td><td>' + 
+ Number(minerror)
++ '</td></tr><td><strong>Your Score (#3): </strong></td><td><strong>' + 
+Math.min(Math.max(Number(Math.round(100 * (jsPsych.data.get().select('error').mean()))/100), Number(Math.round(100*(minerror + (Math.random() * 32)))/100)), Number(Math.round(100*(maxerror - (Math.random() * 32)))/100))  + 
+'</strong></td></tr><tr><td>Bottom Score (#94):</td><td>' + 
+ Number(maxerror)
++ '</td></tr></table><br><br>'},
+        prompt: '<p>You are going well!! Keep at it!! <br>Press any key to continue.</p>',
+        data: {trial_event: 'leaderboard'}
+    }
+
     var feedback = {
         type: 'html-keyboard-response',
         stimulus: function(){
@@ -512,6 +580,29 @@
         data: {trial_event: 'feedback'},
         trial_duration: function(){
             var last_trial_too_slow = jsPsych.data.get().filter({trial_event: "bullseye_trial"}).last(1).values()[0].too_slow;
+            if(last_trial_too_slow){
+                return 1000;
+            } else {
+                return 0;
+            }
+        }
+    } 
+
+
+    var speed_feedback = {
+        type: 'html-keyboard-response',
+        stimulus: function(){
+            var last_trial_too_slow = jsPsych.data.get().filter({trial_event: "speed_trial"}).last(1).values()[0].too_slow;
+                if(last_trial_too_slow){
+                    return "<p><div style='font-size:60px;'>Too Slow! Respond Faster!</div></p>";
+                } else {
+                    return "";
+                }
+            }, 
+        choices: jsPsych.NO_KEYS,
+        data: {trial_event: 'feedback'},
+        trial_duration: function(){
+            var last_trial_too_slow = jsPsych.data.get().filter({trial_event: "speed_trial"}).last(1).values()[0].too_slow;
             if(last_trial_too_slow){
                 return 1000;
             } else {
@@ -537,14 +628,14 @@
     // Practice Timeline events
     var prac_accuracy = {
         timeline: [fixation, accuracy_trial, save_trial_data, feedback],
-        timeline_variables: bullseye_stimulus,
+        timeline_variables: acc_bullseye_stimulus,
         randomize_order: true,
         repetitions: nPracTrials
     }
 
     var prac_speed = {
-        timeline: [fixation, speed_trial, save_trial_data, feedback],
-        timeline_variables: bullseye_stimulus,
+        timeline: [fixation, speed_trial, save_trial_data, speed_feedback],
+        timeline_variables: speed_bullseye_stimulus,
         randomize_order: true,
         repetitions: nPracTrials
     }
@@ -553,14 +644,14 @@
     // Experimental Timeline events
     var exp_accuracy = {
         timeline: [fixation, accuracy_trial, save_trial_data, feedback],
-        timeline_variables: bullseye_stimulus,
+        timeline_variables: acc_bullseye_stimulus,
         randomize_order: true,
         repetitions: nExpTrials
     }
 
     var exp_speed = {
-        timeline: [fixation, speed_trial, save_trial_data, feedback],
-        timeline_variables: bullseye_stimulus,
+        timeline: [fixation, speed_trial, save_trial_data, speed_feedback],
+        timeline_variables: speed_bullseye_stimulus,
         randomize_order: true,
         repetitions: nExpTrials
     }
@@ -571,16 +662,21 @@
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 
     /* Set up experiment timeline */
+
+// Introduction
     experiment_timeline.push(welcome);
     experiment_timeline.push(pls);
     experiment_timeline.push(consent);
     experiment_timeline.push(start_instructions);
+    experiment_timeline.push(competition_instructions);
 
     experiment_timeline.push(sex_age);
     experiment_timeline.push(save_trial_data); // Save sex and age data
 
     experiment_timeline.push(mouse_type);
     experiment_timeline.push(save_trial_data); // Save mouse type data
+
+// Calibration
     experiment_timeline.push(calibration_instructions);
     experiment_timeline.push(calibration_accuracy);
     experiment_timeline.push(end_calibration_instructions);
@@ -596,6 +692,7 @@
     experiment_timeline.push(spoon);
     experiment_timeline.push(save_trial_data); // Save 
 
+// Accuracy - Practice
     experiment_timeline.push(accuracy_instructions);
     experiment_timeline.push(start_practice_instructions);
     experiment_timeline.push(prac_accuracy);
@@ -608,6 +705,8 @@
     experiment_timeline.push(save_trial_data); // Save 
 
     experiment_timeline.push(end_practice_accuracy_instructions);
+
+// Accuracy - Experiment
     experiment_timeline.push(exp_accuracy);
 
     experiment_timeline.push(calm);
@@ -617,6 +716,8 @@
     experiment_timeline.push(confident);
     experiment_timeline.push(save_trial_data); // Save 
 
+
+// Speed - Practice
     experiment_timeline.push(speed_instructions);
     experiment_timeline.push(start_practice_instructions);
     experiment_timeline.push(prac_speed);
@@ -628,6 +729,23 @@
     experiment_timeline.push(confident);
     experiment_timeline.push(save_trial_data); // Save 
 
+    experiment_timeline.push(end_practice_speed_instructions);
+    experiment_timeline.push(competition_start_instructions);
+    experiment_timeline.push(points);
+    experiment_timeline.push(exp_speed);
+
+    experiment_timeline.push(calm);
+    experiment_timeline.push(save_trial_data); // Save 
+    experiment_timeline.push(relaxed);
+    experiment_timeline.push(save_trial_data); // Save 
+    experiment_timeline.push(confident);
+    experiment_timeline.push(save_trial_data); // Save 
+
+    experiment_timeline.push(end_speed_block_instructions);
+
+    experiment_timeline.push(leaderboard);
+    experiment_timeline.push(save_trial_data); // Save 
+
     if (ball_condition[0] == 1){
         experiment_timeline.push(ball_instructions);
     } else {
@@ -635,7 +753,9 @@
     };
     experiment_timeline.push(countdown_timer);
 
-    experiment_timeline.push(end_practice_speed_instructions);
+    experiment_timeline.push(start_speed_block_instructions);
+
+// Speed - Experiment
     experiment_timeline.push(exp_speed);
 
     experiment_timeline.push(calm);
@@ -654,7 +774,6 @@
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 
         
-//    experiment_timeline.push(save_data);
     experiment_timeline.push(debrief);
     experiment_timeline.push(end_experiment_instructions);
 
